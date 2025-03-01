@@ -1,6 +1,7 @@
 import { UserIcon } from "lucide-react";
 import { defineField, defineType } from "sanity";
 
+// schema for author/startup creator
 export const author = defineType({
     name : "author",
     title : "Authors",
