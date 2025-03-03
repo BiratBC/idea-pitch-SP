@@ -14,7 +14,7 @@ export default {
   		},
   		colors: {
   			primary: {
-  				'100': '#FFE8F0',
+  				'100': '#f3d496',
   				DEFAULT: 'hsl(var(--primary))',
   				foreground: 'hsl(var(--primary-foreground))'
   			},

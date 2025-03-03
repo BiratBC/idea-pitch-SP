@@ -1,30 +1,91 @@
 //Route : /startup/${id}
 
-import { STARTUP_BY_ID_QUERY } from '@/lib/queries';
-import { client } from '@/sanity/lib/client';
-import { notFound } from 'next/navigation';
-import React from 'react'
+import { STARTUP_BY_ID_QUERY } from "@/sanity/lib/queries";
+import { formatDate } from "@/lib/utils";
+import { client } from "@/sanity/lib/client";
+import { notFound } from "next/navigation";
+import React, { Suspense } from "react";
+import Link from "next/link";
+import Image from "next/image";
+import markdownit from "markdown-it";
+import { Skeleton } from "@/components/ui/skeleton";
+import View from "@/components/View";
+
+const md = markdownit();
 
 export const experimental_ppr = true;
 
-const page = async ({params} : {params : Promise<{id : string}>}) => {
+const page = async ({ params }: { params: Promise<{ id: string }> }) => {
+  const id = (await params).id;
 
-const id = (await params).id;
+  const post = await client.fetch(STARTUP_BY_ID_QUERY, { id });
 
-const post = await client.fetch(STARTUP_BY_ID_QUERY, {id});
-
-if (!post) {
+  if (!post) {
     return notFound();
-}
+  }
 
-
+  const parsedContenet = md.render(post?.pitch || "");
 
   return (
     <>
-    <h1 className="text-3xl">{post.title}</h1>
-    
-    </>
-  )
-}
+      <section className="yellow_container !min-h-[350px]">
+        <p className="tag">{formatDate(post?._createdAt)}</p>
+        <h1 className="heading">{post?.title}</h1>
+        <p className="sub-heading !max-w-5xl">{post.description}</p>
+      </section>
+      <section className="section_container">
+        <img
+          src={post.image}
+          alt="thumbnail"
+          className="w-full h-auto rounded-xl"
+        />
 
-export default page
+        <div className="space-y-5 mt-10 max-w-4xl mx-auto">
+          <div className="flex-between gap-5">
+            <Link
+              href={`/user/${post.author?._id}`}
+              className="flex gap-2 mb-3 items-center"
+            >
+              <Image
+                src={post.author.image}
+                alt="avatar"
+                width={64}
+                height={64}
+                className="rounded-full drop-shadow-lg h-[64px] w-[64px]"
+              />
+              <div>
+                <p className="text-20-medium"> {post.author.name}</p>
+                <p className="text-20-medium !text-black-300">
+                  {" "}
+                  {post.author.username}
+                </p>
+              </div>
+            </Link>
+
+            <p className="category-tag">{post.category}</p>
+          </div>
+
+          <h3 className="text-30-bold">Startup Details</h3>
+          {parsedContenet ? (
+            <article dangerouslySetInnerHTML={{ __html: parsedContenet }}  className="prose max-w-4xl font-work-sans break-all"/>
+          ) : (
+            <p className="no-result">No details provided</p>
+          )}
+        </div>
+
+        <hr  className="divider"/>
+
+        {/* TODO */}
+          {/* Dynamic Content render : wrap it in suspense tag by react */}
+          <Suspense fallback= {<Skeleton className="view_skeleton"/>}>
+          <View id={id} />
+          </Suspense>
+
+      </section>
+
+
+    </>
+  );
+};
+
+export default page;
